@@ -8,10 +8,10 @@ on:
         required: true
         type: string
       tag:
-        description: "Git Tag/branch to checkout (e.g. dev-next or v1.14.0-alpha.XX)"
+        description: "sing-box git tag to checkout (e.g. v1.14.0-alpha.39)"
         required: true
         type: string
-        default: "dev-next"
+        default: "v1.14.0-alpha.39"
 
 jobs:
   release:
