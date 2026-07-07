@@ -23,10 +23,10 @@ jobs:
 
     steps:
       # --- Check out main repository (actions/checkout@v4) ---
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # --- Check out sing-box source at the requested tag ---
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: SagerNet/sing-box
           path: box
@@ -34,15 +34,9 @@ jobs:
 
       # --- Set up Go (actions/setup-go@v5) ---
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.24.7"
-
-      # --- Set up Node (actions/setup-node@v4) ---
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
 
       # --- Install gomobile toolchain ---
       - name: Setup Gomobile
@@ -91,7 +85,7 @@ jobs:
 
       # --- Commit the manifest and tag the commit (stefanzweifel/git-auto-commit-action@v5) ---
       - name: Commit manifest & tag
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "Libbox Release ${{ github.event.inputs.version }}"
           commit_user_name: "github-actions[bot]"
@@ -101,7 +95,7 @@ jobs:
 
       # --- Publish GitHub release (softprops/action-gh-release@v2) ---
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           tag_name: ${{ github.event.inputs.version }}

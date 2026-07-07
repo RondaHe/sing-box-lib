@@ -1,70 +1,73 @@
+<div align="right">
+
+**简体中文** | [English](./README.en.md)
+
+</div>
+
 # Libbox for Apple
 
-Automated build of [`Libbox.xcframework`](https://github.com/SagerNet/sing-box) — the Go core of
-[sing-box](https://github.com/SagerNet/sing-box) compiled for Apple platforms via `gomobile`, so
-you can `import Libbox` from Swift (NetworkExtension, main app, etc.) without touching the Go
-toolchain yourself.
+自动编译 [`Libbox.xcframework`](https://github.com/SagerNet/sing-box) —— 把
+[sing-box](https://github.com/SagerNet/sing-box) 的 Go 内核通过 `gomobile` 编译成苹果平台可用的
+framework，让你在 Swift 里(NetworkExtension、主 App 等)直接 `import Libbox`，无需自己碰 Go
+工具链。
 
-A GitHub Actions workflow clones sing-box at a ref you choose, builds the xcframework on a macOS
-runner, and publishes it as a GitHub Release — which also makes this repo a ready-to-use Swift
-Package.
+一个 GitHub Actions 工作流会按你指定的 ref 拉取 sing-box 源码，在 macOS runner 上编出
+xcframework，并作为 GitHub Release 发布 —— 同时让本仓库成为一个开箱即用的 Swift Package。
 
-> Fork of [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib),
-> updated to track sing-box `dev-next` (the 1.14.0-alpha line).
+> Fork 自 [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib)，
+> 已更新为跟随 sing-box 的 1.14.0-alpha 线。
 
-## Building a release
+## 编译一个 Release
 
-1. Go to the **Actions** tab → **Release** → **Run workflow**.
-2. Fill in the inputs:
-   - **`version`** — the release tag to create. Use a valid **SemVer**, e.g. `1.14.0-alpha.39`, so
-     Swift Package Manager can resolve it by version.
-   - **`tag`** — the sing-box git ref to build. Defaults to `dev-next`; you can also pin an exact
-     tag like `v1.14.0-alpha.39`.
-3. Run it. After a few minutes the workflow will:
-   - build `Libbox.xcframework` (iOS device + simulator slices),
-   - attach `Libbox.xcframework.zip` to a new Release,
-   - rewrite and tag `Package.swift` to point at that asset with its checksum.
+1. 进 **Actions** 标签页 → **Release** → **Run workflow**。
+2. 填写输入:
+   - **`version`** —— 要创建的 release tag。请用**合法的 SemVer**(如 `1.14.0-alpha.39`),这样
+     Swift Package Manager 才能按版本解析。
+   - **`tag`** —— 要编译的 sing-box git tag,默认 `v1.14.0-alpha.39`,可自行改成其它 tag。
+3. 运行。几分钟后工作流会:
+   - 编出 `Libbox.xcframework`(含 iOS 真机 + 模拟器 slice);
+   - 把 `Libbox.xcframework.zip` 挂到新建的 Release 上;
+   - 重写并打 tag `Package.swift`,指向该产物及其 checksum。
 
-## Using the output
+## 使用产物
 
-### As a Swift Package (for new projects)
+### 作为 Swift Package(用于新项目)
 
 ```swift
 .package(url: "https://github.com/RondaHe/sing-box-lib.git", exact: "1.14.0-alpha.39")
 ```
 
-Or in Xcode: **File → Add Package Dependencies…** and paste the repo URL. Xcode downloads the
-matching release zip automatically (checksum is baked into `Package.swift`).
+或在 Xcode 里:**File → Add Package Dependencies…** 粘贴仓库 URL。Xcode 会自动下载对应 release 的
+zip(checksum 已写进 `Package.swift`)。
 
-### As a local xcframework (for sing-box-for-apple)
+### 作为本地 xcframework(用于 sing-box-for-apple)
 
-[sing-box-for-apple](https://github.com/SagerNet/sing-box-for-apple) references `Libbox.xcframework`
-as a **local framework at the project root** (Embed & Sign), shared by both the app and the
-NetworkExtension target — not via SPM. For that project:
+[sing-box-for-apple](https://github.com/SagerNet/sing-box-for-apple) 是把 `Libbox.xcframework`
+当作**工程根目录下的本地 framework**(Embed & Sign)来引用的,由主 App 和 NetworkExtension 两个
+target 共享 —— 而不是走 SPM。对该工程:
 
-1. Download `Libbox.xcframework.zip` from the Release.
-2. Unzip it.
-3. Copy `Libbox.xcframework` into the sing-box-for-apple project root.
+1. 从 Release 下载 `Libbox.xcframework.zip`;
+2. 解压;
+3. 把 `Libbox.xcframework` 拷到 sing-box-for-apple 工程根目录。
 
-## Version matching
+## 版本匹配
 
-`Libbox` is the Go-side API generated from sing-box's `experimental/libbox` package; your Swift code
-can only call symbols that exist in the sing-box revision it was built from. Build the ref that
-matches your client:
+`Libbox` 是从 sing-box 的 `experimental/libbox` 包生成的 Go 侧 API;你的 Swift 代码只能调用**它编译
+自的那个 sing-box 版本里存在的符号**。请编译与你客户端匹配的 ref:
 
-- **sing-box-for-apple `dev` branch** ↔ sing-box **`dev-next`** (kept in lockstep by upstream).
-- If a build against `Libbox` fails to compile with `cannot find 'LibboxXxx' in scope`, the core is
-  older than your client — build a newer `tag`. The compiler is the source of truth.
+- **sing-box-for-apple 的 `dev` 分支** ↔ sing-box 的 **1.14.0-alpha 线**(上游锁步开发)。
+- 如果用 `Libbox` 编译时报 `cannot find 'LibboxXxx' in scope`,说明内核比你的客户端旧 —— 编一个更新
+  的 `tag`。**编译器是唯一裁判。**
 
-The Go version in the workflow (`go-version`) must satisfy sing-box's `go.mod` (currently
-`go 1.24.7`). Bump it when upstream raises the requirement.
+工作流里的 Go 版本(`go-version`)必须满足 sing-box 的 `go.mod`(当前为 `go 1.24.7`)。上游提高要求
+时记得同步提升。
 
-## Credits
+## 致谢
 
-- [SagerNet/sing-box](https://github.com/SagerNet/sing-box) — the core.
-- [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib) — the
-  original build workflow this fork is based on.
+- [SagerNet/sing-box](https://github.com/SagerNet/sing-box) —— 内核。
+- [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib) —— 本 fork
+  所基于的原始编译工作流。
 
-## License
+## 许可
 
-The sing-box core is licensed under GPL-3.0-or-later; builds produced here inherit that license.
+sing-box 内核以 GPL-3.0-or-later 授权;此处产出的编译产物同样继承该许可。
