@@ -15,16 +15,24 @@ A GitHub Actions workflow clones sing-box at a ref you choose, builds the xcfram
 runner, and publishes it as a GitHub Release — which also makes this repo a ready-to-use Swift
 Package.
 
+**Two cores are supported** (pick from a dropdown):
+- [`SagerNet/sing-box`](https://github.com/SagerNet/sing-box) — the official upstream core.
+- [`KaringX/sing-box`](https://github.com/KaringX/sing-box) — Karing's modified fork (latency-test
+  and other tweaks).
+
 > Fork of [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib),
-> updated to track sing-box's 1.14.0-alpha line.
+> updated to track sing-box's 1.14.0-alpha line and extended to allow choosing the core source.
 
 ## Building a release
 
 1. Go to the **Actions** tab → **Release** → **Run workflow**.
-2. Fill in the inputs:
-   - **`version`** — the release tag to create. Use a valid **SemVer**, e.g. `1.14.0-alpha.39`, so
-     Swift Package Manager can resolve it by version.
-   - **`tag`** — the sing-box git tag to build. Defaults to `v1.14.0-alpha.39`; you can set any tag.
+2. Fill in the inputs (the form already defaults to KaringX 2102 — usually just hit Run):
+   - **Core (`repository`)** — dropdown: `KaringX/sing-box` or `SagerNet/sing-box`.
+   - **`tag`** — the source git tag/branch to build (KaringX e.g. `2102`; SagerNet e.g.
+     `v1.14.0-alpha.39`).
+   - **Release name (`version`)** — becomes the GitHub Release title + tag and the download/SPM
+     version. **Use a distinct name per core** (e.g. `karing-2102` / `sagernet-1.14.0-alpha.39`) so
+     they don't overwrite each other. Keep it valid **SemVer** if you consume it via SPM.
 3. Run it. After a few minutes the workflow will:
    - build `Libbox.xcframework` (iOS device + simulator slices),
    - attach `Libbox.xcframework.zip` to a new Release,
@@ -61,13 +69,17 @@ matches your client:
   upstream).
 - If a build against `Libbox` fails to compile with `cannot find 'LibboxXxx' in scope`, the core is
   older than your client — build a newer `tag`. The compiler is the source of truth.
+- **KaringX note:** it's based on SagerNet's `testing` branch plus heavy modifications (newer than
+  1.14.0-alpha.39), so its Libbox Swift-facing API may differ from the official build. If your
+  client won't compile after switching, adapt the Swift calls to the reported errors.
 
 The Go version in the workflow (`go-version`) must satisfy sing-box's `go.mod` (currently
 `go 1.24.7`). Bump it when upstream raises the requirement.
 
 ## Credits
 
-- [SagerNet/sing-box](https://github.com/SagerNet/sing-box) — the core.
+- [SagerNet/sing-box](https://github.com/SagerNet/sing-box) — the official core.
+- [KaringX/sing-box](https://github.com/KaringX/sing-box) — Karing's modified core fork.
 - [EbrahimTahernejad/sing-box-lib](https://github.com/EbrahimTahernejad/sing-box-lib) — the
   original build workflow this fork is based on.
 
