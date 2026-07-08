@@ -3,20 +3,24 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Release version"
-        required: true
-        type: string
       repository:
-        description: "sing-box source repo (SagerNet/sing-box or KaringX/sing-box)"
+        description: "选择内核 (source repo)"
         required: true
-        type: string
-        default: "SagerNet/sing-box"
+        type: choice
+        default: "KaringX/sing-box"
+        options:
+          - "KaringX/sing-box"
+          - "SagerNet/sing-box"
       tag:
-        description: "git ref/tag to checkout (SagerNet: v1.14.0-alpha.39 / KaringX: 2102)"
+        description: "git tag/分支 (KaringX 如 2102 / SagerNet 如 v1.14.0-alpha.39)"
         required: true
         type: string
-        default: "v1.14.0-alpha.39"
+        default: "2102"
+      version:
+        description: "本次 Release 名 (下载/SPM 用，两种内核别重名)"
+        required: true
+        type: string
+        default: "karing-2102"
 
 jobs:
   release:
