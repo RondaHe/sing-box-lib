@@ -17,7 +17,7 @@ on:
         type: string
         default: "2102"
       version:
-        description: "本次 Release 名 (下载/SPM 用，两种内核别重名)"
+        description: "产物版本名：会作为 GitHub Release 的标题+tag，也是下载/SPM 引用的版本号（两种内核务必用不同名，别互相覆盖）"
         required: true
         type: string
         default: "karing-2102"
