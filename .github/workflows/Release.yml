@@ -73,36 +73,42 @@ jobs:
       - name: Update Package.swift
         shell: bash
         run: |
-          echo "// swift-tools-version: 5.7" > Package.swift
-          echo "" >> Package.swift
-          echo "import PackageDescription" >> Package.swift
-          echo "" >> Package.swift
-          echo "let package = Package(" >> Package.swift
-          echo "  name: \"Libbox\"," >> Package.swift
-          echo "  platforms: [.iOS(.v12)]," >> Package.swift
-          echo "  products: [" >> Package.swift
-          echo "    .library(name: \"Libbox\", targets: [\"Libbox\"])," >> Package.swift
-          echo "  ]," >> Package.swift
-          echo "  targets: [" >> Package.swift
-          echo "    .binaryTarget(" >> Package.swift
-          echo "      name: \"Libbox\"," >> Package.swift
-          echo "      url: \"https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.version }}/Libbox.xcframework.zip\"," >> Package.swift
-          echo "      checksum: \"${{ env.file_checksum }}\"" >> Package.swift
-          echo "    )" >> Package.swift
-          echo "  ]" >> Package.swift
-          echo ")" >> Package.swift
+          cat > Package.swift <<EOF
+          // swift-tools-version: 5.7
 
-      # --- Commit the manifest and tag the commit (stefanzweifel/git-auto-commit-action@v5) ---
-      - name: Commit manifest & tag
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "Libbox Release ${{ github.event.inputs.version }}"
-          commit_user_name: "github-actions[bot]"
-          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
-          tagging_message: "${{ github.event.inputs.version }}"
-          file_pattern: Package.swift
+          import PackageDescription
 
-      # --- Publish GitHub release (softprops/action-gh-release@v2) ---
+          let package = Package(
+            name: "Libbox",
+            platforms: [.iOS(.v12)],
+            products: [
+              .library(name: "Libbox", targets: ["Libbox"]),
+            ],
+            targets: [
+              .binaryTarget(
+                name: "Libbox",
+                url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.version }}/Libbox.xcframework.zip",
+                checksum: "${{ env.file_checksum }}"
+              )
+            ]
+          )
+          EOF
+
+      # --- Commit manifest + tag, then push ONLY the tag.
+      #     Pushing just the tag (not main) avoids non-fast-forward races when
+      #     main moved during the run; the tag carries the updated Package.swift
+      #     so SPM resolves correctly. -f lets re-runs overwrite the tag. ---
+      - name: Tag manifest
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Package.swift
+          git commit -m "Libbox Release ${{ github.event.inputs.version }}"
+          git tag -f "${{ github.event.inputs.version }}"
+          git push -f origin "refs/tags/${{ github.event.inputs.version }}"
+
+      # --- Publish GitHub release (attaches the xcframework to the tag above) ---
       - name: Upload Release
         uses: softprops/action-gh-release@v3
         with:
